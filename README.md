@@ -1,15 +1,14 @@
-# Connectrpc Fastify Wrapper
+# Connectrpc Fastify Wrapper For Nestjs
 
 ## Description
 
-This is a wrapper for [Connectrpc](https://github.com/connectrpc/connect-es) using the [Fastify](https://github.com/fastify/fastify) server.
+This package allows to add [Connectrpc](https://github.com/connectrpc/connect-es) into [Nestjs](https://github.com/nestjs/nest) project using the [Fastify](https://github.com/fastify/fastify) server.
 
 If you are comfortable with HTTP/1 only and want a compact, ready-to-use setup, this repository is for you.
 
 It simplifies the binding of controllers, middlewares, and guards.
 
-I use it as a basis for integration into Nestjs, which will be implemented [here](https://github.com/funduck/connectrpc-fastify-nestjs).
-
+It uses my another package [Connectrpc Fastify Wrapper](https://github.com/funduck/connectrpc-fastify).
 
 ## Features
 
@@ -23,13 +22,21 @@ This library allows you to:
 
 *Bidirectional streaming RPC is currently out of scope because it requires HTTP/2, which is unstable on public networks. In practice, HTTP/1 provides more consistent performance.*
 
+
 ## How To Use
-You can check out `test` directory for a complete example of server and client.
+
+You can check out the `test` directory for a complete example of server and client integration using NestJS and Fastify. Start reading from `test/app.module.ts`.
+
+Except the bootstrap instructions are pretty much the same as in [Connectrpc Fastify Wrapper](https://github.com/funduck/connectrpc-fastify#how-to-use).
 
 ### Controllers
-Controller must implement the service interface and register itself with `ConnectRPC.registerController` in the constructor.
+Controller must implement the service interface (not all methods) and register itself using `ConnectRPC.registerController`:
 ```TS
+@Injectable()
 export class ElizaController implements Service<typeof ElizaService> {
+  @Inject(Logger)
+  private logger: Logger;
+
   constructor() {
     ConnectRPC.registerController(this, ElizaService);
   }
@@ -41,33 +48,19 @@ export class ElizaController implements Service<typeof ElizaService> {
       sentence: `You said: ${request.sentence}`,
     };
   }
-}
-```
 
-Create Fastify server, initialize controller and register ConnectRPC plugin.
-```TS
-const fastify = Fastify({
-    logger: true,
-});
-
-new ElizaController();
-
-await ConnectRPC.registerFastifyPlugin(fastify);
-
-try {
-    await fastify.listen({ port: 3000 });
-} catch (err) {
-    fastify.log.error(err);
-    process.exit(1);
+  // ... Other methods are optional
 }
 ```
 
 ### Middlewares
-You can use middlewares for pre-processing requests.
-
-Middleware must implement `Middleware` interface and register itself with `ConnectRPC.registerMiddleware` in the constructor.
+Middleware must implement `Middleware` interface and register itself using `ConnectRPC.registerMiddleware`:
 ```TS
+@Injectable()
 export class TestMiddleware1 implements Middleware {
+  @Inject(Logger)
+  private logger: Logger;
+
   constructor() {
     ConnectRPC.registerMiddleware(this);
   }
@@ -76,40 +69,17 @@ export class TestMiddleware1 implements Middleware {
     next();
   }
 }
-```
 
-Then create an instance of the middleware before registering the ConnectRPC plugin.
-```TS
-const fastify = Fastify({
-    logger: true,
-});
-
-new ElizaController();
-
-new TestMiddleware1();
-
-await ConnectRPC.registerFastifyPlugin(fastify);
-
-ConnectRPC.initMiddlewares(fastify, [
-    middlewareConfig(TestMiddleware1), // Global middleware for all services and methods
-    //middlewareConfig(TestMiddleware1, ElizaService), // Middleware for all ElizaService methods
-    //middlewareConfig(TestMiddleware1, ElizaService, ['say']), // Middleware for ElizaService's say method only
-]);
-
-try {
-    await fastify.listen({ port: 3000 });
-} catch (err) {
-    fastify.log.error(err);
-    process.exit(1);
-}
 ```
 
 ### Guards
-Guards are used to restrict access to certain services or methods.
-
-Guard must implement `Guard` interface and register itself with `ConnectRPC.registerGuard` in the constructor.
+Guard must implement `Guard` interface and register itself using `ConnectRPC.registerGuard`:
 ```TS
+@Injectable()
 export class TestGuard1 implements Guard {
+  @Inject(Logger)
+  private logger: Logger;
+
   constructor() {
     ConnectRPC.registerGuard(this);
   }
@@ -120,35 +90,62 @@ export class TestGuard1 implements Guard {
 }
 ```
 
-Then create an instance of the guard before registering the ConnectRPC plugin and initialize it similarly to middlewares.
-```TS
-const fastify = Fastify({
-    logger: true,
-});
+### Module Setup
+Configure your NestJS module to use `ConnectRPCModule.forRoot` and register middlewares/guards as providers if necessary:
 
-new ElizaController();
+```typescript
+@Module({
+  imports: [
+    // Configure ConnectRPCModule
+    ConnectRPCModule.forRoot({
+      logger: new Logger('ConnectRPC', { timestamp: true }),
+      middlewares: [
+        middlewareConfig(TestMiddleware1),
+        middlewareConfig(TestMiddleware2, ElizaService),
+        middlewareConfig(TestMiddleware3, ElizaService, ['say']),
+      ],
+    }),
+  ],
+  providers: [
+    Logger,
 
-new TestMiddleware1();
+    // Guard is provided the NestJS way
+    { provide: APP_GUARD, useClass: TestGuard1 },
 
-new TestGuard1();
+    // Controllers are provided here instead of `controllers` array
+    ElizaController, 
 
-await ConnectRPC.registerFastifyPlugin(fastify);
+    // Middlewares specific for ConnectRPC are provided here
+    TestMiddleware1, 
+    TestMiddleware2,
 
-ConnectRPC.initMiddlewares(fastify, [
-    middlewareConfig(TestMiddleware1), // Global middleware for all services and methods
-    // middlewareConfig(TestMiddleware1, ElizaService), // Middleware for all ElizaService methods
-    // middlewareConfig(TestMiddleware1, ElizaService, ['say']), // Middleware for ElizaService's say method only
-]);
+    // Middlewares that are applied via `consumer.apply()` should NOT be provided here
+    // Do not instantiate TestMiddleware3 twice!
+  ],
+})
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(TestMiddleware3).forRoutes('*'); // TestMiddleware3 is instantiated here!
+  }
+}
+```
 
-ConnectRPC.initGuards(fastify);
+### Server Bootstrap
+Just add the call to `ConnectRPCModule` after creating the app:
 
-try {
-    await fastify.listen({ port: 3000 });
-} catch (err) {
-    fastify.log.error(err);
-    process.exit(1);
+```typescript
+export async function bootstrap() {
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    new FastifyAdapter(),
+  );
+
+  // After the app is created, register the ConnectRPCModule
+  await app.get(ConnectRPCModule).registerPlugin();
+
+  await app.listen(3000);
 }
 ```
 
 ## Feedback
-Please use [Discussions](https://github.com/funduck/connectrpc-fastify/discussions) or email me.
+Please use [Discussions](https://github.com/funduck/connectrpc-fastify-nestjs/discussions) or email me.
