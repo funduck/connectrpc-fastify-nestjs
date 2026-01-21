@@ -1,9 +1,10 @@
 {
   "name": "@funduck/connectrpc-fastify-nestjs",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "author": "Oleg Milekhin <qlfunduck@gmail.com>",
   "description": "Wrapper for official @connectrpc/connect and fastify integrated into Nestjs. Simplifies configuration, type safe binding to controller, simplifies use of middlewares and guards.",
-  "main": "dist/src/index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "npx rimraf dist; tsc -p tsconfig.build.json",
     "compile-proto": "cd test && npx buf dep update; npx buf lint; npx buf generate",
@@ -12,16 +13,15 @@
     "publish:latest": "npm publish --tag latest --access public"
   },
   "license": "MIT",
-  "dependencies": {
-    "@bufbuild/protobuf": "^2.10.2",
-    "@funduck/connectrpc-fastify": "^1.0.8",
+  "peerDependencies": {
+    "@funduck/connectrpc-fastify": "^1.0.11",
     "@nestjs/common": "^11.1.12",
     "@nestjs/core": "^11.1.12",
-    "@nestjs/platform-fastify": "^11.1.12",
-    "fastify": "^5.6.2"
+    "@nestjs/platform-fastify": "^11.1.12"
   },
   "devDependencies": {
     "@bufbuild/buf": "^1.64.0",
+    "@bufbuild/protobuf": "^2.10.2",
     "@bufbuild/protoc-gen-es": "^2.10.2",
     "@connectrpc/connect": "^2.1.1",
     "@connectrpc/connect-node": "^2.1.1",
