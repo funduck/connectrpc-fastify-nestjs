@@ -1,4 +1,7 @@
 # Connectrpc Fastify Wrapper For Nestjs
+!BETA
+
+Code is not production ready.
 
 ## Description
 
