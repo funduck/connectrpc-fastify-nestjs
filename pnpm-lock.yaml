@@ -12,8 +12,8 @@ importers:
         specifier: ^2.10.2
         version: 2.10.2
       '@funduck/connectrpc-fastify':
-        specifier: ^1.0.4
-        version: 1.0.4(@connectrpc/connect-node@2.1.1(@bufbuild/protobuf@2.10.2)(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.10.2)))
+        specifier: ^1.0.8
+        version: 1.0.8(@connectrpc/connect-node@2.1.1(@bufbuild/protobuf@2.10.2)(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.10.2)))(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.10.2))
       '@nestjs/common':
         specifier: ^11.1.12
         version: 11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -169,8 +169,8 @@ packages:
   '@fastify/proxy-addr@5.1.0':
     resolution: {integrity: sha512-INS+6gh91cLUjB+PVHfu1UqcB76Sqtpyp7bnL+FYojhjygvOPA9ctiD/JDKsyD9Xgu4hUhCSJBPig/w7duNajw==}
 
-  '@funduck/connectrpc-fastify@1.0.4':
-    resolution: {integrity: sha512-FZxUoRV+sCvhddoSSJAPYA7SFHDQHCChqXtzWiFX/u9ecWAQV6j8h3ZE/tDKKs0zXAF/fywZ5/jgNHsHr32lOA==}
+  '@funduck/connectrpc-fastify@1.0.8':
+    resolution: {integrity: sha512-YwMVNKQ+zd+ayi344rAL1O3XqJOrz4zbh5tYBSVQLbztkSEzWlFCjXFGxGMdv+h8FRTJzSpEMQ1nguuCER8Ycw==}
 
   '@jridgewell/resolve-uri@3.1.2':
     resolution: {integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==}
@@ -657,14 +657,14 @@ snapshots:
       '@fastify/forwarded': 3.0.1
       ipaddr.js: 2.3.0
 
-  '@funduck/connectrpc-fastify@1.0.4(@connectrpc/connect-node@2.1.1(@bufbuild/protobuf@2.10.2)(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.10.2)))':
+  '@funduck/connectrpc-fastify@1.0.8(@connectrpc/connect-node@2.1.1(@bufbuild/protobuf@2.10.2)(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.10.2)))(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.10.2))':
     dependencies:
       '@bufbuild/protobuf': 2.10.2
-      '@connectrpc/connect': 2.1.1(@bufbuild/protobuf@2.10.2)
       '@connectrpc/connect-fastify': 2.1.1(@bufbuild/protobuf@2.10.2)(@connectrpc/connect-node@2.1.1(@bufbuild/protobuf@2.10.2)(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.10.2)))(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.10.2))(fastify@5.6.2)
       fastify: 5.6.2
       type-fest: 5.4.1
     transitivePeerDependencies:
+      - '@connectrpc/connect'
       - '@connectrpc/connect-node'
 
   '@jridgewell/resolve-uri@3.1.2': {}
