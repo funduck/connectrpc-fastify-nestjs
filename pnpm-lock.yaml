@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@funduck/connectrpc-fastify':
-        specifier: ^1.0.11
-        version: 1.0.11(@bufbuild/protobuf@2.10.2)(@connectrpc/connect-fastify@2.1.1(@bufbuild/protobuf@2.10.2)(@connectrpc/connect-node@2.1.1(@bufbuild/protobuf@2.10.2)(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.10.2)))(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.10.2))(fastify@5.6.2))(fastify@5.6.2)(type-fest@5.4.1)
+        specifier: ^1.0.13
+        version: 1.0.13(@bufbuild/protobuf@2.10.2)(@connectrpc/connect-fastify@2.1.1(@bufbuild/protobuf@2.10.2)(@connectrpc/connect-node@2.1.1(@bufbuild/protobuf@2.10.2)(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.10.2)))(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.10.2))(fastify@5.6.2))(fastify@5.6.2)(type-fest@5.4.1)
       '@nestjs/common':
         specifier: ^11.1.12
         version: 11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -166,8 +166,8 @@ packages:
   '@fastify/proxy-addr@5.1.0':
     resolution: {integrity: sha512-INS+6gh91cLUjB+PVHfu1UqcB76Sqtpyp7bnL+FYojhjygvOPA9ctiD/JDKsyD9Xgu4hUhCSJBPig/w7duNajw==}
 
-  '@funduck/connectrpc-fastify@1.0.11':
-    resolution: {integrity: sha512-rv2QCk9eZbLkUpO7Nauyaj/bMDWJkAUEqXyMN7/3MQIO7+dL9SfW2Gn2vNPTeu77ZtcaZjsrKFcrIq7ZB1DXqA==}
+  '@funduck/connectrpc-fastify@1.0.13':
+    resolution: {integrity: sha512-j5xS2N4mqy/OKU6T6p3UcDEZrqnDtX9PBoJHGw6hY30s+ykeuvyd3ic0CoQ66CymPKyoaBmtjOhWVpqWFjUpmQ==}
     peerDependencies:
       '@bufbuild/protobuf': ^2.10.2
       '@connectrpc/connect-fastify': ^2.1.1
@@ -659,7 +659,7 @@ snapshots:
       '@fastify/forwarded': 3.0.1
       ipaddr.js: 2.3.0
 
-  '@funduck/connectrpc-fastify@1.0.11(@bufbuild/protobuf@2.10.2)(@connectrpc/connect-fastify@2.1.1(@bufbuild/protobuf@2.10.2)(@connectrpc/connect-node@2.1.1(@bufbuild/protobuf@2.10.2)(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.10.2)))(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.10.2))(fastify@5.6.2))(fastify@5.6.2)(type-fest@5.4.1)':
+  '@funduck/connectrpc-fastify@1.0.13(@bufbuild/protobuf@2.10.2)(@connectrpc/connect-fastify@2.1.1(@bufbuild/protobuf@2.10.2)(@connectrpc/connect-node@2.1.1(@bufbuild/protobuf@2.10.2)(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.10.2)))(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.10.2))(fastify@5.6.2))(fastify@5.6.2)(type-fest@5.4.1)':
     dependencies:
       '@bufbuild/protobuf': 2.10.2
       '@connectrpc/connect-fastify': 2.1.1(@bufbuild/protobuf@2.10.2)(@connectrpc/connect-node@2.1.1(@bufbuild/protobuf@2.10.2)(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.10.2)))(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.10.2))(fastify@5.6.2)

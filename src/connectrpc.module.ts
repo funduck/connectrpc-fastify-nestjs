@@ -100,8 +100,5 @@ export class ConnectRPCModule implements OnModuleInit {
 
     // Initialize middlewares first
     await ConnectRPC.initMiddlewares(server, this.options.middlewares || []);
-
-    // Initialize guards after middlewares
-    await ConnectRPC.initGuards(server);
   }
 }

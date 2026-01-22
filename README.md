@@ -9,7 +9,7 @@ This package allows to add [Connectrpc](https://github.com/connectrpc/connect-es
 
 If you are comfortable with HTTP/1 only and want a compact, ready-to-use setup, this repository is for you.
 
-It simplifies the binding of controllers, middlewares, and guards.
+It simplifies the binding of controllers and middlewares.
 
 It uses my another package [Connectrpc Fastify Wrapper](https://github.com/funduck/connectrpc-fastify).
 
@@ -21,7 +21,6 @@ This library allows you to:
 * Perform RPC with streaming responses
 * Perform RPC with streaming requests
 * Use middlewares
-* Use global guards
 
 *Bidirectional streaming RPC is currently out of scope because it requires HTTP/2, which is unstable on public networks. In practice, HTTP/1 provides more consistent performance.*
 
@@ -75,26 +74,8 @@ export class TestMiddleware1 implements Middleware {
 
 ```
 
-### Guards
-Guard must implement `Guard` interface and register itself using `ConnectRPC.registerGuard`:
-```TS
-@Injectable()
-export class TestGuard1 implements Guard {
-  @Inject(Logger)
-  private logger: Logger;
-
-  constructor() {
-    ConnectRPC.registerGuard(this);
-  }
-
-  canActivate(context: ExecutionContext): boolean {
-    return true;
-  }
-}
-```
-
 ### Module Setup
-Configure your NestJS module to use `ConnectRPCModule.forRoot` and register middlewares/guards as providers if necessary:
+Configure your NestJS module to use `ConnectRPCModule.forRoot` and register middlewares as providers if necessary:
 
 ```typescript
 @Module({
@@ -111,9 +92,6 @@ Configure your NestJS module to use `ConnectRPCModule.forRoot` and register midd
   ],
   providers: [
     Logger,
-
-    // Guard is provided the NestJS way
-    { provide: APP_GUARD, useClass: TestGuard1 },
 
     // Controllers are provided here instead of `controllers` array
     ElizaController, 

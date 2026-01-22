@@ -1,10 +1,8 @@
 import { middlewareConfig } from '@funduck/connectrpc-fastify';
 import { Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
 import { ConnectRPCModule } from '../src';
 import { ElizaController } from './controller';
 import { ElizaService } from './gen/connectrpc/eliza/v1/eliza_pb';
-import { TestGuard1 } from './guards';
 import {
   TestMiddleware1,
   TestMiddleware2,
@@ -27,11 +25,6 @@ import {
   ],
   providers: [
     Logger,
-    // Registering a global guard the NestJS way
-    {
-      provide: APP_GUARD,
-      useClass: TestGuard1,
-    },
 
     // Connectrpc controller is not "http" controller, so we don't put it in "controllers" array
     ElizaController,

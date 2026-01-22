@@ -1,3 +1,4 @@
+import { HandlerContext } from '@connectrpc/connect';
 import {
   ConnectRPC,
   OmitConnectrpcFields,
@@ -23,12 +24,10 @@ export class ElizaController implements Service<typeof ElizaService> {
   /**
    * Unary RPC: Say
    * Client sends one request, server sends one response
-   *
-   * For demonstration, this method is decorated with @SkipAuthGuard to bypass authentication.
    */
   async say(
     request: SayRequest,
-
+    context: HandlerContext,
     // You can leave out the return type, it will be inferred from the interface
   ) {
     this.logger.log(`Controller received request Say`);
@@ -43,7 +42,7 @@ export class ElizaController implements Service<typeof ElizaService> {
    */
   async sayMany(
     request: AsyncIterable<SayRequest>,
-
+    context: HandlerContext,
     // You can specify the return type if you want, but you always need to use OmitConnectrpcFields<> because ConnectRPC adds extra fields internally
   ): Promise<OmitConnectrpcFields<SayResponses>> {
     this.logger.log(`Controller received request SayMany`);
@@ -65,7 +64,7 @@ export class ElizaController implements Service<typeof ElizaService> {
    * Server Streaming RPC: ListenMany
    * Client sends one request, server sends multiple responses
    */
-  async *listenMany(request: SayRequest) {
+  async *listenMany(request: SayRequest, context: HandlerContext) {
     this.logger.log(`Controller received request ListenMany`);
 
     const words = request.sentence.split(' ');
