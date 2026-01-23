@@ -21,13 +21,14 @@ This library allows you to:
 * Perform RPC with streaming responses
 * Perform RPC with streaming requests
 * Use middlewares
+* Use interceptors
 
 *Bidirectional streaming RPC is currently out of scope because it requires HTTP/2, which is unstable on public networks. In practice, HTTP/1 provides more consistent performance.*
 
 
 ## How To Use
 
-You can check out the `test` directory for a complete example of server and client integration using NestJS and Fastify. Start reading from `test/app.module.ts`.
+You can check out the `test/demo` directory for a complete example of server and client integration using NestJS and Fastify. Start reading from `test/demo/app.module.ts`.
 
 Except the bootstrap instructions are pretty much the same as in [Connectrpc Fastify Wrapper](https://github.com/funduck/connectrpc-fastify#how-to-use).
 
@@ -74,8 +75,30 @@ export class TestMiddleware1 implements Middleware {
 
 ```
 
+### Interceptors
+Interceptor must implement `Interceptor` interface and register itself using `ConnectRPC.registerInterceptor`:
+```TS
+@Injectable()
+export class TestInterceptor1 implements Interceptor {
+  @Inject(Logger)
+  private logger: Logger;
+
+  constructor() {
+    ConnectRPC.registerInterceptor(this);
+  }
+
+  use(next: AnyFn): AnyFn {
+    return async (req) => {
+      this.logger.log(`TestInterceptor1 invoked`);
+      return await next(req);
+    };
+  }
+}
+
+```
+
 ### Module Setup
-Configure your NestJS module to use `ConnectRPCModule.forRoot` and register middlewares as providers if necessary:
+Configure your NestJS module to use `ConnectRPCModule.forRoot` and register middlewares and interceptors as providers if necessary:
 
 ```typescript
 @Module({
@@ -87,6 +110,11 @@ Configure your NestJS module to use `ConnectRPCModule.forRoot` and register midd
         middlewareConfig(TestMiddleware1),
         middlewareConfig(TestMiddleware2, ElizaService),
         middlewareConfig(TestMiddleware3, ElizaService, ['say']),
+      ],
+      interceptors: [
+        interceptorConfig(TestInterceptor1),
+        interceptorConfig(TestInterceptor2, ElizaService),
+        interceptorConfig(TestInterceptor3, ElizaService, ['say']),
       ],
     }),
   ],
@@ -102,6 +130,11 @@ Configure your NestJS module to use `ConnectRPCModule.forRoot` and register midd
 
     // Middlewares that are applied via `consumer.apply()` should NOT be provided here
     // Do not instantiate TestMiddleware3 twice!
+
+    // Interceptors specific for ConnectRPC are provided here
+    TestInterceptor1,
+    TestInterceptor2,
+    TestInterceptor3,
   ],
 })
 export class AppModule implements NestModule {

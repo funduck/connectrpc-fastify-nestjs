@@ -1,23 +1,26 @@
 {
   "name": "@funduck/connectrpc-fastify-nestjs",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "author": "Oleg Milekhin <qlfunduck@gmail.com>",
   "description": "Wrapper for official @connectrpc/connect and fastify integrated into Nestjs. Simplifies configuration, type safe binding to controller, simplifies use of middlewares.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "npx rimraf dist; tsc -p tsconfig.build.json",
-    "compile-proto": "cd test && npx buf dep update; npx buf lint; npx buf generate",
-    "test": "npm run compile-proto && cd test && DEBUG=true npx tsx e2e-demo.ts",
-    "publish:check": "npm test && npm run build && npm publish --tag latest --access public --dry-run",
-    "publish:latest": "npm publish --tag latest --access public"
+    "compile-proto": "cd test/demo && npx buf dep update; npx buf lint; npx buf generate",
+    "test:demo": "npm run compile-proto && cd test/demo && DEBUG=true npx tsx e2e-demo.ts",
+    "test": "npm run compile-proto && jest --verbose",
+    "test:coverage": "npm run compile-proto && jest --coverage --runInBand",
+    "publish:check": "npm test && npm run test:demo && npm run build && npm publish --tag latest --access public --dry-run",
+    "publish:latest": "npm test && npm run test:demo && npm run build && npm publish --tag latest --access public"
   },
   "license": "MIT",
   "peerDependencies": {
-    "@funduck/connectrpc-fastify": "^1.0.13",
+    "@funduck/connectrpc-fastify": "^1.0.17",
     "@nestjs/common": "^11.1.12",
     "@nestjs/core": "^11.1.12",
-    "@nestjs/platform-fastify": "^11.1.12"
+    "@nestjs/platform-fastify": "^11.1.12",
+    "fastify": "^5.6.2"
   },
   "devDependencies": {
     "@bufbuild/buf": "^1.64.0",
@@ -25,8 +28,16 @@
     "@bufbuild/protoc-gen-es": "^2.10.2",
     "@connectrpc/connect": "^2.1.1",
     "@connectrpc/connect-node": "^2.1.1",
+    "@funduck/connectrpc-fastify": "^1.0.17",
+    "@nestjs/common": "^11.1.12",
+    "@nestjs/core": "^11.1.12",
+    "@nestjs/platform-fastify": "^11.1.12",
+    "@types/jest": "^30.0.0",
     "@types/node": "^25.0.9",
+    "fastify": "^5.6.2",
+    "jest": "^30.2.0",
     "prettier-plugin-organize-imports": "^4.3.0",
+    "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }

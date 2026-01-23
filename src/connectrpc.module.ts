@@ -85,6 +85,8 @@ export class ConnectRPCModule implements OnModuleInit {
       throw new Error('Fastify server instance not found');
     }
 
+    ConnectRPC.initInterceptors(this.options.interceptors || []);
+
     await ConnectRPC.registerFastifyPlugin(server);
   }
 

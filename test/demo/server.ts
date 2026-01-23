@@ -4,7 +4,7 @@ import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
-import { ConnectRPCModule } from '../src';
+import { ConnectRPCModule } from '../../src';
 import { AppModule } from './app.module';
 
 export async function bootstrap() {

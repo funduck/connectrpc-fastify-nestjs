@@ -5,7 +5,7 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 @Injectable()
 export class TestMiddleware1 implements Middleware {
   static callback = (req: FastifyRequest['raw'], res: FastifyReply['raw']) =>
-    null;
+    undefined;
 
   @Inject(Logger)
   private logger: Logger;
@@ -26,7 +26,7 @@ export class TestMiddleware1 implements Middleware {
 @Injectable()
 export class TestMiddleware2 implements Middleware {
   static callback = (req: FastifyRequest['raw'], res: FastifyReply['raw']) =>
-    null;
+    undefined;
 
   @Inject(Logger)
   private logger: Logger;
@@ -47,7 +47,7 @@ export class TestMiddleware2 implements Middleware {
 @Injectable()
 export class TestMiddleware3 implements Middleware {
   static callback = (req: FastifyRequest['raw'], res: FastifyReply['raw']) =>
-    null;
+    undefined;
 
   @Inject(Logger)
   private logger: Logger;

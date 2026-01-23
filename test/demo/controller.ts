@@ -14,6 +14,20 @@ import { ElizaService } from './gen/connectrpc/eliza/v1/eliza_pb';
 
 @Injectable()
 export class ElizaController implements Service<typeof ElizaService> {
+  // Callbacks for testing purposes
+  static sayCallback: (
+    request: SayRequest,
+    context: HandlerContext,
+  ) => undefined;
+  static listenManyCallback: (
+    request: SayRequest,
+    context: HandlerContext,
+  ) => undefined;
+  static sayManyCallback: (
+    request: AsyncIterable<SayRequest>,
+    context: HandlerContext,
+  ) => undefined;
+
   @Inject(Logger)
   private logger: Logger;
 
@@ -30,7 +44,10 @@ export class ElizaController implements Service<typeof ElizaService> {
     context: HandlerContext,
     // You can leave out the return type, it will be inferred from the interface
   ) {
+    ElizaController.sayCallback?.(request, context);
+
     this.logger.log(`Controller received request Say`);
+
     return {
       sentence: `You said: ${request.sentence}`,
     };
@@ -45,6 +62,8 @@ export class ElizaController implements Service<typeof ElizaService> {
     context: HandlerContext,
     // You can specify the return type if you want, but you always need to use OmitConnectrpcFields<> because ConnectRPC adds extra fields internally
   ): Promise<OmitConnectrpcFields<SayResponses>> {
+    ElizaController.sayManyCallback?.(request, context);
+
     this.logger.log(`Controller received request SayMany`);
 
     const responses: OmitConnectrpcFields<SayResponse>[] = [];
@@ -65,6 +84,8 @@ export class ElizaController implements Service<typeof ElizaService> {
    * Client sends one request, server sends multiple responses
    */
   async *listenMany(request: SayRequest, context: HandlerContext) {
+    ElizaController.listenManyCallback?.(request, context);
+
     this.logger.log(`Controller received request ListenMany`);
 
     const words = request.sentence.split(' ');

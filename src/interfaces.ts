@@ -1,4 +1,5 @@
 import { Logger, MiddlewareConfigUnion } from '@funduck/connectrpc-fastify';
+import { InterceptorConfigUnion } from '@funduck/connectrpc-fastify/dist/interfaces';
 
 /**
  * Options for configuring ConnectRPC module
@@ -10,6 +11,11 @@ export interface ConnectRPCModuleOptions {
    * Middleware configurations to apply to ConnectRPC routes
    */
   middlewares?: MiddlewareConfigUnion[];
+
+  /**
+   * Interceptor configurations to apply to ConnectRPC routes
+   */
+  interceptors?: InterceptorConfigUnion[];
 
   // For now we enable only Connect protocol by default and disable others.
   // /**

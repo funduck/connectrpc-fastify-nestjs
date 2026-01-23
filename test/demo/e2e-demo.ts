@@ -6,6 +6,11 @@ import {
   SayRequestSchema,
 } from './gen/connectrpc/eliza/v1/eliza_pb';
 import {
+  TestInterceptor1,
+  TestInterceptor2,
+  TestInterceptor3,
+} from './interceptors';
+import {
   TestMiddleware1,
   TestMiddleware2,
   TestMiddleware3,
@@ -34,17 +39,37 @@ function prepareMiddlewares() {
   TestMiddleware1.callback = (req, res) => {
     console.log(`Middleware 1 called for request: ${req.url}`);
     testMiddlewareCalled[1] = true;
-    return null;
   };
   TestMiddleware2.callback = (req, res) => {
     console.log(`Middleware 2 called for request: ${req.url}`);
     testMiddlewareCalled[2] = true;
-    return null;
   };
   TestMiddleware3.callback = (req, res) => {
     console.log(`Middleware 3 called for request: ${req.url}`);
     testMiddlewareCalled[3] = true;
-    return null;
+  };
+}
+
+let testInterceptorCalled = {
+  1: false,
+  2: false,
+  3: false,
+};
+function prepareInterceptors() {
+  testInterceptorCalled[1] = false;
+  testInterceptorCalled[2] = false;
+  testInterceptorCalled[3] = false;
+  TestInterceptor1.callback = (req) => {
+    console.log(`Interceptor 1 called for request`);
+    testInterceptorCalled[1] = true;
+  };
+  TestInterceptor2.callback = (req) => {
+    console.log(`Interceptor 2 called for request`);
+    testInterceptorCalled[2] = true;
+  };
+  TestInterceptor3.callback = (req) => {
+    console.log(`Interceptor 3 called for request`);
+    testInterceptorCalled[3] = true;
   };
 }
 
@@ -55,6 +80,7 @@ async function testUnary() {
 
   try {
     prepareMiddlewares();
+    prepareInterceptors();
 
     const response = await client.say(
       { sentence },
@@ -80,6 +106,19 @@ async function testUnary() {
       );
     }
 
+    // Check that all interceptors were called
+    if (
+      !testInterceptorCalled[1] ||
+      !testInterceptorCalled[2] ||
+      !testInterceptorCalled[3]
+    ) {
+      throw new Error(
+        `Not all interceptors were called: ${JSON.stringify(
+          testInterceptorCalled,
+        )}`,
+      );
+    }
+
     console.log('✅ Unary RPC test passed\n');
     return true;
   } catch (error) {
@@ -95,6 +134,7 @@ async function testClientStreaming() {
 
   try {
     prepareMiddlewares();
+    prepareInterceptors();
 
     // Create an async generator to send multiple requests
     async function* generateRequests() {
@@ -130,6 +170,21 @@ async function testClientStreaming() {
         )}`,
       );
     }
+    // Check that all interceptors were called
+    if (!testInterceptorCalled[1] || !testInterceptorCalled[2]) {
+      throw new Error(
+        `Not all interceptors were called: ${JSON.stringify(
+          testInterceptorCalled,
+        )}`,
+      );
+    }
+    if (testInterceptorCalled[3]) {
+      throw new Error(
+        `Interceptor 3 should not have been called for SayMany: ${JSON.stringify(
+          testInterceptorCalled,
+        )}`,
+      );
+    }
 
     console.log('✅ Client Streaming RPC test passed\n');
     return true;
@@ -147,6 +202,7 @@ async function testServerStreaming() {
 
   try {
     prepareMiddlewares();
+    prepareInterceptors();
 
     let count = 0;
     for await (const response of client.listenMany(
@@ -174,6 +230,21 @@ async function testServerStreaming() {
       throw new Error(
         `Middleware 3 should not have been called for SayMany: ${JSON.stringify(
           testMiddlewareCalled,
+        )}`,
+      );
+    }
+    // Check that all interceptors were called
+    if (!testInterceptorCalled[1] || !testInterceptorCalled[2]) {
+      throw new Error(
+        `Not all interceptors were called: ${JSON.stringify(
+          testInterceptorCalled,
+        )}`,
+      );
+    }
+    if (testInterceptorCalled[3]) {
+      throw new Error(
+        `Interceptor 3 should not have been called for SayMany: ${JSON.stringify(
+          testInterceptorCalled,
         )}`,
       );
     }
