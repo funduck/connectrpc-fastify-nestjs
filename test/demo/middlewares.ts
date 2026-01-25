@@ -11,9 +11,7 @@ export class TestMiddleware1 implements Middleware {
   private logger: Logger;
 
   constructor() {
-    ConnectRPC.registerMiddleware(this, {
-      allowMultipleInstances: false, // If true, we allow multiple instances of this middleware, but usually we want only one
-    });
+    ConnectRPC.registerMiddleware(this);
   }
 
   use(req: FastifyRequest['raw'], res: FastifyReply['raw'], next: () => void) {
@@ -32,9 +30,7 @@ export class TestMiddleware2 implements Middleware {
   private logger: Logger;
 
   constructor() {
-    ConnectRPC.registerMiddleware(this, {
-      allowMultipleInstances: false, // If true, we allow multiple instances of this middleware, but usually we want only one
-    });
+    ConnectRPC.registerMiddleware(this);
   }
 
   use(req: FastifyRequest['raw'], res: FastifyReply['raw'], next: () => void) {
@@ -53,9 +49,7 @@ export class TestMiddleware3 implements Middleware {
   private logger: Logger;
 
   constructor() {
-    ConnectRPC.registerMiddleware(this, {
-      allowMultipleInstances: false, // If true, we allow multiple instances of this middleware, but usually we want only one
-    });
+    ConnectRPC.registerMiddleware(this);
   }
 
   use(req: FastifyRequest['raw'], res: FastifyReply['raw'], next: () => void) {
