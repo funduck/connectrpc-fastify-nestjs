@@ -4,12 +4,12 @@
 name: Node.js Package
 
 # Trigger on new release creation
-# on:
-#   release:
-#     types: [created]
+on:
+  release:
+    types: [created]
 
 # Manual trigger
-on: workflow_dispatch
+# on: workflow_dispatch
 
 jobs:
   test-build-publish:
@@ -29,4 +29,5 @@ jobs:
       - run: pnpm install
       - run: pnpm run test:coverage
       - run: pnpm run test:demo
+      - run: pnpm run build
       - run: npm publish --tag latest --access public

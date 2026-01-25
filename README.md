@@ -1,6 +1,8 @@
 # Connectrpc Fastify Wrapper For Nestjs
 <img src="./coverage/badge.svg" alt="Coverage Badge" />
 
+[github](https://github.com/funduck/connectrpc-fastify-nestjs)
+
 !BETA
 
 Code is not production ready.
