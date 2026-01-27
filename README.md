@@ -163,6 +163,13 @@ export async function bootstrap() {
 }
 ```
 
+## Strict Mode
+If **strict mode** is enabled the library will cause process to exit on errors such as missing middleware or interceptor instances.  
+By default, strict mode is disabled to allow more flexibility during development.
+
+To enable it call `ConnectRPC.setStrictMode(true)` before registering any middlewares or interceptors.  
+To check it read `ConnectRPC.isStrictMode` property.
+
 ### More examples
 See `test/demo` and `examples` directories for more examples.
 

@@ -57,12 +57,20 @@ export class ConnectRPCModule implements OnModuleInit {
     const httpAdapter = this.httpAdapterHost.httpAdapter;
 
     if (!httpAdapter) {
-      throw new Error('HTTP Adapter not found');
+      this.logger.error('HTTP Adapter not found');
+      if (ConnectRPC.isStrictMode) {
+        throw new Error('HTTP Adapter not found');
+      }
+      return;
     }
 
     // For now, only Fastify is supported
     if (!(httpAdapter instanceof FastifyAdapter)) {
-      throw new Error('Only FastifyAdapter is supported');
+      this.logger.error('Only FastifyAdapter is supported');
+      if (ConnectRPC.isStrictMode) {
+        throw new Error('Only FastifyAdapter is supported');
+      }
+      return;
     }
     const fastifyAdapter = httpAdapter as FastifyAdapter;
 
@@ -82,7 +90,11 @@ export class ConnectRPCModule implements OnModuleInit {
 
     const server = this.getServer();
     if (!server) {
-      throw new Error('Fastify server instance not found');
+      this.logger.error('Fastify server instance not found');
+      if (ConnectRPC.isStrictMode) {
+        throw new Error('Fastify server instance not found');
+      }
+      return;
     }
 
     ConnectRPC.initInterceptors(this.options.interceptors || []);
@@ -93,12 +105,25 @@ export class ConnectRPCModule implements OnModuleInit {
   /** This is called by NestJS after the module has been initialized */
   async onModuleInit() {
     if (!this.registerPluginCalled) {
-      throw new Error(
-        'ConnectRPCModule.onModuleInit: registerPlugin() has not been called. Please call registerPlugin() after app initialization and before server starts listening.',
+      this.logger.error(
+        'registerPlugin() has not been called. Please call registerPlugin() after app initialization and before server starts listening.',
       );
+      if (ConnectRPC.isStrictMode) {
+        throw new Error(
+          'registerPlugin() has not been called. Please call registerPlugin() after app initialization and before server starts listening.',
+        );
+      }
+      return;
     }
 
     const server = this.getServer();
+    if (!server) {
+      this.logger.error('Fastify server instance not found');
+      if (ConnectRPC.isStrictMode) {
+        throw new Error('Fastify server instance not found');
+      }
+      return;
+    }
 
     // Initialize middlewares first
     await ConnectRPC.initMiddlewares(server, this.options.middlewares || []);

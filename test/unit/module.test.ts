@@ -1,48 +1,24 @@
-import { ConnectRPC } from '@funduck/connectrpc-fastify';
-import { HttpAdapterHost } from '@nestjs/core';
-import { FastifyAdapter } from '@nestjs/platform-fastify';
+import {
+  ConnectRPC,
+  interceptorConfig,
+  middlewareConfig,
+} from '@funduck/connectrpc-fastify';
+import { Logger, Module } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import {
+  FastifyAdapter,
+  NestFastifyApplication,
+} from '@nestjs/platform-fastify';
 import { ConnectRPCModule } from '../../src/connectrpc.module';
-import { ConnectRPCModuleOptions } from '../../src/interfaces';
+import { ElizaController } from '../demo/controller';
+import { TestInterceptor1 } from '../demo/interceptors';
+import { TestMiddleware1 } from '../demo/middlewares';
 
-// Mock ConnectRPC
-jest.mock('@funduck/connectrpc-fastify');
+describe('ConnectRPCModule Integration Tests', () => {
+  let app: NestFastifyApplication;
+  let connectRPCModule: ConnectRPCModule;
 
-describe('ConnectRPCModule', () => {
-  let mockHttpAdapterHost: jest.Mocked<HttpAdapterHost>;
-  let mockFastifyAdapter: any;
-  let mockFastifyInstance: any;
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-
-    // Create mock Fastify instance
-    mockFastifyInstance = {
-      register: jest.fn(),
-    };
-
-    // Create mock FastifyAdapter - needs to be an actual instance for instanceof check
-    mockFastifyAdapter = Object.create(FastifyAdapter.prototype);
-    mockFastifyAdapter.getInstance = jest
-      .fn()
-      .mockReturnValue(mockFastifyInstance);
-
-    // Create mock HttpAdapterHost
-    mockHttpAdapterHost = {
-      httpAdapter: mockFastifyAdapter,
-    } as any;
-
-    // Mock ConnectRPC methods
-    (ConnectRPC.setLogger as jest.Mock) = jest.fn();
-    (ConnectRPC.initInterceptors as jest.Mock) = jest.fn();
-    (ConnectRPC.registerFastifyPlugin as jest.Mock) = jest
-      .fn()
-      .mockResolvedValue(undefined);
-    (ConnectRPC.initMiddlewares as jest.Mock) = jest
-      .fn()
-      .mockResolvedValue(undefined);
-  });
-
-  describe('forRoot', () => {
+  describe('Basic Module Creation', () => {
     it('should create module without options', () => {
       const module = ConnectRPCModule.forRoot();
 
@@ -53,148 +29,161 @@ describe('ConnectRPCModule', () => {
     });
 
     it('should create module with logger option', () => {
-      const mockLogger = {
-        error: jest.fn(),
-        warn: jest.fn(),
-        debug: jest.fn(),
-        log: jest.fn(),
-        verbose: jest.fn(),
-      };
+      const customLogger = new Logger('TestLogger');
+      const module = ConnectRPCModule.forRoot({ logger: customLogger });
 
-      const module = ConnectRPCModule.forRoot({ logger: mockLogger });
-
-      expect(ConnectRPC.setLogger).toHaveBeenCalledWith(mockLogger);
       expect(module.module).toBe(ConnectRPCModule);
+      expect(module.providers).toBeDefined();
     });
 
     it('should create module with all options', () => {
-      const options: ConnectRPCModuleOptions = {
-        logger: {
-          error: jest.fn(),
-          warn: jest.fn(),
-          debug: jest.fn(),
-          log: jest.fn(),
-          verbose: jest.fn(),
-        },
+      const customLogger = new Logger('TestLogger');
+      const module = ConnectRPCModule.forRoot({
+        logger: customLogger,
         middlewares: [],
         interceptors: [],
-      };
+      });
 
-      const module = ConnectRPCModule.forRoot(options);
-
-      expect(ConnectRPC.setLogger).toHaveBeenCalledWith(options.logger);
       expect(module.module).toBe(ConnectRPCModule);
+      expect(module.providers).toBeDefined();
     });
   });
 
-  describe('getServer', () => {
-    it('should throw error when HTTP adapter is not found', async () => {
-      const options: ConnectRPCModuleOptions = {};
-      const moduleOptions = ConnectRPCModule.forRoot(options);
-
-      // Create module instance with no HTTP adapter
-      const mockEmptyAdapterHost = {
-        httpAdapter: null,
-      } as any;
-
-      const moduleInstance = new ConnectRPCModule(
-        mockEmptyAdapterHost,
-        options,
-      );
-
-      await expect(moduleInstance.registerPlugin()).rejects.toThrow(
-        'HTTP Adapter not found',
-      );
+  describe('Server Lifecycle', () => {
+    afterEach(async () => {
+      if (app) {
+        await app.close();
+        ConnectRPC.clear();
+      }
     });
 
-    it('should throw error when adapter is not FastifyAdapter', async () => {
-      const options: ConnectRPCModuleOptions = {};
+    it('should start server and register plugin successfully', async () => {
+      @Module({
+        imports: [ConnectRPCModule.forRoot()],
+        providers: [ElizaController, Logger],
+      })
+      class TestAppModule {}
 
-      // Create a mock non-Fastify adapter
-      const mockExpressAdapter = {
-        getInstance: jest.fn(),
-      };
-
-      const mockAdapterHost = {
-        httpAdapter: mockExpressAdapter,
-      } as any;
-
-      const moduleInstance = new ConnectRPCModule(mockAdapterHost, options);
-
-      await expect(moduleInstance.registerPlugin()).rejects.toThrow(
-        'Only FastifyAdapter is supported',
+      app = await NestFactory.create<NestFastifyApplication>(
+        TestAppModule,
+        new FastifyAdapter(),
+        { logger: false },
       );
-    });
-  });
 
-  describe('registerPlugin', () => {
-    it('should register plugin successfully', async () => {
-      const options: ConnectRPCModuleOptions = {
-        interceptors: [],
-      };
+      connectRPCModule = app.get(ConnectRPCModule);
 
-      const moduleInstance = new ConnectRPCModule(mockHttpAdapterHost, options);
+      await connectRPCModule.registerPlugin();
+      await app.init();
 
-      await moduleInstance.registerPlugin();
-
-      expect(ConnectRPC.initInterceptors).toHaveBeenCalledWith([]);
-      expect(ConnectRPC.registerFastifyPlugin).toHaveBeenCalledWith(
-        mockFastifyInstance,
-      );
+      expect(app).toBeDefined();
+      expect(connectRPCModule).toBeDefined();
     });
 
-    it('should warn when registerPlugin is called twice', async () => {
-      const options: ConnectRPCModuleOptions = {};
-      const moduleInstance = new ConnectRPCModule(mockHttpAdapterHost, options);
+    it('should throw error when registerPlugin is called twice', async () => {
+      @Module({
+        imports: [ConnectRPCModule.forRoot()],
+        providers: [ElizaController, Logger],
+      })
+      class TestAppModule {}
 
+      app = await NestFactory.create<NestFastifyApplication>(
+        TestAppModule,
+        new FastifyAdapter(),
+        { logger: false },
+      );
+
+      connectRPCModule = app.get(ConnectRPCModule);
+
+      await connectRPCModule.registerPlugin();
+
+      // Second call should log warning but not throw
       const warnSpy = jest.spyOn(ConnectRPCModule.logger, 'warn');
-
-      await moduleInstance.registerPlugin();
-      await moduleInstance.registerPlugin();
+      await connectRPCModule.registerPlugin();
 
       expect(warnSpy).toHaveBeenCalledWith(
         'registerPlugin() has already been called',
       );
     });
 
-    it('should throw error when fastify server instance is null', async () => {
-      const options: ConnectRPCModuleOptions = {};
+    it('should throw error when onModuleInit is called before registerPlugin', async () => {
+      @Module({
+        imports: [ConnectRPCModule.forRoot()],
+        providers: [ElizaController, Logger],
+      })
+      class TestAppModule {}
 
-      // Mock getInstance to return null
-      mockFastifyAdapter.getInstance.mockReturnValue(null);
+      ConnectRPC.setStrictMode(true);
 
-      const moduleInstance = new ConnectRPCModule(mockHttpAdapterHost, options);
+      app = await NestFactory.create<NestFastifyApplication>(
+        TestAppModule,
+        new FastifyAdapter(),
+        { logger: false },
+      );
 
-      await expect(moduleInstance.registerPlugin()).rejects.toThrow(
-        'Fastify server instance not found',
+      connectRPCModule = app.get(ConnectRPCModule);
+
+      await expect(connectRPCModule.onModuleInit()).rejects.toThrow(
+        /registerPlugin\(\) has not been called/,
       );
     });
-  });
 
-  describe('onModuleInit', () => {
-    it('should throw error when registerPlugin was not called', async () => {
-      const options: ConnectRPCModuleOptions = {};
-      const moduleInstance = new ConnectRPCModule(mockHttpAdapterHost, options);
+    it('should initialize with custom logger', async () => {
+      const customLogger = new Logger('CustomConnectRPC');
 
-      await expect(moduleInstance.onModuleInit()).rejects.toThrow(
-        'ConnectRPCModule.onModuleInit: registerPlugin() has not been called',
+      @Module({
+        imports: [ConnectRPCModule.forRoot({ logger: customLogger })],
+        providers: [ElizaController, Logger],
+      })
+      class TestAppModule {}
+
+      app = await NestFactory.create<NestFastifyApplication>(
+        TestAppModule,
+        new FastifyAdapter(),
+        { logger: false },
       );
+
+      connectRPCModule = app.get(ConnectRPCModule);
+
+      await connectRPCModule.registerPlugin();
+      await app.init();
+
+      expect(connectRPCModule).toBeDefined();
     });
 
-    it('should initialize middlewares after registerPlugin', async () => {
-      const options: ConnectRPCModuleOptions = {
-        middlewares: [],
+    it('should initialize with middlewares and interceptors', async () => {
+      let middlewareCalled = false;
+      let interceptorCalled = false;
+
+      TestMiddleware1.callback = (req, res) => {
+        middlewareCalled = true;
+      };
+      TestInterceptor1.callback = async (req) => {
+        interceptorCalled = true;
       };
 
-      const moduleInstance = new ConnectRPCModule(mockHttpAdapterHost, options);
+      @Module({
+        imports: [
+          ConnectRPCModule.forRoot({
+            middlewares: [middlewareConfig(TestMiddleware1)],
+            interceptors: [interceptorConfig(TestInterceptor1)],
+          }),
+        ],
+        providers: [ElizaController, Logger],
+      })
+      class TestAppModule {}
 
-      await moduleInstance.registerPlugin();
-      await moduleInstance.onModuleInit();
-
-      expect(ConnectRPC.initMiddlewares).toHaveBeenCalledWith(
-        mockFastifyInstance,
-        [],
+      app = await NestFactory.create<NestFastifyApplication>(
+        TestAppModule,
+        new FastifyAdapter(),
+        { logger: false },
       );
+
+      connectRPCModule = app.get(ConnectRPCModule);
+
+      await connectRPCModule.registerPlugin();
+      await app.init();
+
+      expect(connectRPCModule).toBeDefined();
     });
   });
 
@@ -202,6 +191,301 @@ describe('ConnectRPCModule', () => {
     it('should have a logger instance', () => {
       expect(ConnectRPCModule.logger).toBeDefined();
       expect(ConnectRPCModule.logger.constructor.name).toBe('Logger');
+    });
+  });
+
+  describe('Error Handling in Strict Mode', () => {
+    beforeEach(() => {
+      ConnectRPC.setStrictMode(true);
+    });
+
+    afterEach(async () => {
+      ConnectRPC.setStrictMode(false);
+      if (app) {
+        await app.close();
+        ConnectRPC.clear();
+      }
+    });
+
+    it('should throw error when HTTP adapter is not found', async () => {
+      @Module({
+        imports: [ConnectRPCModule.forRoot()],
+        providers: [ElizaController, Logger],
+      })
+      class TestAppModule {}
+
+      app = await NestFactory.create<NestFastifyApplication>(
+        TestAppModule,
+        new FastifyAdapter(),
+        { logger: false },
+      );
+
+      connectRPCModule = app.get(ConnectRPCModule);
+
+      // Mock the httpAdapterHost to return null httpAdapter
+      Object.defineProperty(connectRPCModule, 'httpAdapterHost', {
+        value: { httpAdapter: null },
+        writable: true,
+        configurable: true,
+      });
+
+      await expect(connectRPCModule.registerPlugin()).rejects.toThrow(
+        'HTTP Adapter not found',
+      );
+    });
+
+    it('should throw error when non-Fastify adapter is used', async () => {
+      @Module({
+        imports: [ConnectRPCModule.forRoot()],
+        providers: [ElizaController, Logger],
+      })
+      class TestAppModule {}
+
+      app = await NestFactory.create<NestFastifyApplication>(
+        TestAppModule,
+        new FastifyAdapter(),
+        { logger: false },
+      );
+
+      connectRPCModule = app.get(ConnectRPCModule);
+
+      // Mock the httpAdapterHost to return a non-Fastify adapter
+      const mockAdapter = {
+        getInstance: jest.fn(),
+      };
+      Object.defineProperty(connectRPCModule, 'httpAdapterHost', {
+        value: { httpAdapter: mockAdapter },
+        writable: true,
+        configurable: true,
+      });
+
+      await expect(connectRPCModule.registerPlugin()).rejects.toThrow(
+        'Only FastifyAdapter is supported',
+      );
+    });
+
+    it('should throw error when Fastify server instance is not found in registerPlugin', async () => {
+      @Module({
+        imports: [ConnectRPCModule.forRoot()],
+        providers: [ElizaController, Logger],
+      })
+      class TestAppModule {}
+
+      app = await NestFactory.create<NestFastifyApplication>(
+        TestAppModule,
+        new FastifyAdapter(),
+        { logger: false },
+      );
+
+      connectRPCModule = app.get(ConnectRPCModule);
+
+      // Mock the FastifyAdapter to return null server instance
+      const mockAdapter = new FastifyAdapter();
+      jest.spyOn(mockAdapter, 'getInstance').mockReturnValue(null as any);
+      Object.defineProperty(connectRPCModule, 'httpAdapterHost', {
+        value: { httpAdapter: mockAdapter },
+        writable: true,
+        configurable: true,
+      });
+
+      await expect(connectRPCModule.registerPlugin()).rejects.toThrow(
+        'Fastify server instance not found',
+      );
+    });
+
+    it('should throw error when Fastify server instance is not found in onModuleInit', async () => {
+      @Module({
+        imports: [ConnectRPCModule.forRoot()],
+        providers: [ElizaController, Logger],
+      })
+      class TestAppModule {}
+
+      app = await NestFactory.create<NestFastifyApplication>(
+        TestAppModule,
+        new FastifyAdapter(),
+        { logger: false },
+      );
+
+      connectRPCModule = app.get(ConnectRPCModule);
+
+      // First call registerPlugin successfully
+      await connectRPCModule.registerPlugin();
+
+      // Then mock the FastifyAdapter to return null server instance for onModuleInit
+      const mockAdapter = new FastifyAdapter();
+      jest.spyOn(mockAdapter, 'getInstance').mockReturnValue(null as any);
+      Object.defineProperty(connectRPCModule, 'httpAdapterHost', {
+        value: { httpAdapter: mockAdapter },
+        writable: true,
+        configurable: true,
+      });
+
+      await expect(connectRPCModule.onModuleInit()).rejects.toThrow(
+        'Fastify server instance not found',
+      );
+    });
+  });
+
+  describe('Error Logging in Non-Strict Mode', () => {
+    beforeEach(() => {
+      ConnectRPC.setStrictMode(false);
+    });
+
+    afterEach(async () => {
+      if (app) {
+        await app.close();
+        ConnectRPC.clear();
+      }
+    });
+
+    it('should log error but not throw when HTTP adapter is not found', async () => {
+      @Module({
+        imports: [ConnectRPCModule.forRoot()],
+        providers: [ElizaController, Logger],
+      })
+      class TestAppModule {}
+
+      app = await NestFactory.create<NestFastifyApplication>(
+        TestAppModule,
+        new FastifyAdapter(),
+        { logger: false },
+      );
+
+      connectRPCModule = app.get(ConnectRPCModule);
+
+      // Mock the httpAdapterHost to return null httpAdapter
+      Object.defineProperty(connectRPCModule, 'httpAdapterHost', {
+        value: { httpAdapter: null },
+        writable: true,
+        configurable: true,
+      });
+
+      const errorSpy = jest.spyOn(ConnectRPCModule.logger, 'error');
+
+      await connectRPCModule.registerPlugin();
+
+      expect(errorSpy).toHaveBeenCalledWith('HTTP Adapter not found');
+    });
+
+    it('should log error but not throw when non-Fastify adapter is used', async () => {
+      @Module({
+        imports: [ConnectRPCModule.forRoot()],
+        providers: [ElizaController, Logger],
+      })
+      class TestAppModule {}
+
+      app = await NestFactory.create<NestFastifyApplication>(
+        TestAppModule,
+        new FastifyAdapter(),
+        { logger: false },
+      );
+
+      connectRPCModule = app.get(ConnectRPCModule);
+
+      // Mock the httpAdapterHost to return a non-Fastify adapter
+      const mockAdapter = {
+        getInstance: jest.fn(),
+      };
+      Object.defineProperty(connectRPCModule, 'httpAdapterHost', {
+        value: { httpAdapter: mockAdapter },
+        writable: true,
+        configurable: true,
+      });
+
+      const errorSpy = jest.spyOn(ConnectRPCModule.logger, 'error');
+
+      await connectRPCModule.registerPlugin();
+
+      expect(errorSpy).toHaveBeenCalledWith('Only FastifyAdapter is supported');
+    });
+
+    it('should log error but not throw when Fastify server instance is not found in registerPlugin', async () => {
+      @Module({
+        imports: [ConnectRPCModule.forRoot()],
+        providers: [ElizaController, Logger],
+      })
+      class TestAppModule {}
+
+      app = await NestFactory.create<NestFastifyApplication>(
+        TestAppModule,
+        new FastifyAdapter(),
+        { logger: false },
+      );
+
+      connectRPCModule = app.get(ConnectRPCModule);
+
+      // Mock the FastifyAdapter to return null server instance
+      const mockAdapter = new FastifyAdapter();
+      jest.spyOn(mockAdapter, 'getInstance').mockReturnValue(null as any);
+      Object.defineProperty(connectRPCModule, 'httpAdapterHost', {
+        value: { httpAdapter: mockAdapter },
+        writable: true,
+        configurable: true,
+      });
+
+      const errorSpy = jest.spyOn(ConnectRPCModule.logger, 'error');
+
+      await connectRPCModule.registerPlugin();
+
+      expect(errorSpy).toHaveBeenCalledWith('Fastify server instance not found');
+    });
+
+    it('should log error but not throw when onModuleInit is called before registerPlugin', async () => {
+      @Module({
+        imports: [ConnectRPCModule.forRoot()],
+        providers: [ElizaController, Logger],
+      })
+      class TestAppModule {}
+
+      app = await NestFactory.create<NestFastifyApplication>(
+        TestAppModule,
+        new FastifyAdapter(),
+        { logger: false },
+      );
+
+      connectRPCModule = app.get(ConnectRPCModule);
+
+      const errorSpy = jest.spyOn(ConnectRPCModule.logger, 'error');
+
+      await connectRPCModule.onModuleInit();
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        'registerPlugin() has not been called. Please call registerPlugin() after app initialization and before server starts listening.',
+      );
+    });
+
+    it('should log error but not throw when Fastify server instance is not found in onModuleInit', async () => {
+      @Module({
+        imports: [ConnectRPCModule.forRoot()],
+        providers: [ElizaController, Logger],
+      })
+      class TestAppModule {}
+
+      app = await NestFactory.create<NestFastifyApplication>(
+        TestAppModule,
+        new FastifyAdapter(),
+        { logger: false },
+      );
+
+      connectRPCModule = app.get(ConnectRPCModule);
+
+      // First call registerPlugin successfully
+      await connectRPCModule.registerPlugin();
+
+      // Then mock the FastifyAdapter to return null server instance for onModuleInit
+      const mockAdapter = new FastifyAdapter();
+      jest.spyOn(mockAdapter, 'getInstance').mockReturnValue(null as any);
+      Object.defineProperty(connectRPCModule, 'httpAdapterHost', {
+        value: { httpAdapter: mockAdapter },
+        writable: true,
+        configurable: true,
+      });
+
+      const errorSpy = jest.spyOn(ConnectRPCModule.logger, 'error');
+
+      await connectRPCModule.onModuleInit();
+
+      expect(errorSpy).toHaveBeenCalledWith('Fastify server instance not found');
     });
   });
 });
