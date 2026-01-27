@@ -1,6 +1,6 @@
 {
   "name": "@funduck/connectrpc-fastify-nestjs",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "author": "Oleg Milekhin <qlfunduck@gmail.com>",
   "description": "Wrapper for official @connectrpc/connect and fastify integrated into Nestjs. Simplifies configuration, type safe binding to controller, simplifies use of middlewares.",
   "main": "dist/index.js",
