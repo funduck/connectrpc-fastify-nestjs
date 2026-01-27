@@ -1,11 +1,9 @@
 # Connectrpc Fastify Wrapper For Nestjs
 <img src="./coverage/badge.svg" alt="Coverage Badge" />
 
-[github](https://github.com/funduck/connectrpc-fastify-nestjs)
-
-!BETA
-
-Code is not production ready.
+Repo on [github](https://github.com/funduck/connectrpc-fastify-nestjs)  
+Package on [npm](https://www.npmjs.com/package/@funduck/connectrpc-fastify-nestjs)  
+Related [base repo without Nestjs](https://github.com/funduck/connectrpc-fastify)
 
 ## Description
 
@@ -164,6 +162,9 @@ export async function bootstrap() {
   await app.listen(3000);
 }
 ```
+
+### More examples
+See `test/demo` and `examples` directories for more examples.
 
 ## Feedback
 Please use [Discussions](https://github.com/funduck/connectrpc-fastify-nestjs/discussions) or email me.

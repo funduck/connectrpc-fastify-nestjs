@@ -4,7 +4,7 @@
     "noImplicitAny": false,
     "noUnusedLocals": false,
     "removeComments": false,
-    "strictNullChecks": true,
+    "strictNullChecks": false,
     "strictPropertyInitialization": false,
     "forceConsistentCasingInFileNames": true,
     "noLib": false,
