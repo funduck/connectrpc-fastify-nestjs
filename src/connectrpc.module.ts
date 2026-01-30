@@ -97,6 +97,8 @@ export class ConnectRPCModule implements OnModuleInit {
       return;
     }
 
+    ConnectRPC.initControllers();
+
     ConnectRPC.initInterceptors(this.options.interceptors || []);
 
     await ConnectRPC.registerFastifyPlugin(server);
